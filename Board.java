@@ -1,9 +1,8 @@
 package com.codef0x.snake;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
@@ -12,11 +11,13 @@ import java.util.TimerTask;
 
 
 public class Board extends JPanel implements KeyListener {
+    int highscore;
     Snake player;
     Food food;
     ArrayList<SnakePart> snakeCoordinates;
 
     public Board() {
+        this.highscore = 0;
 
         this.snakeCoordinates = new ArrayList<>();
         
@@ -35,16 +36,22 @@ public class Board extends JPanel implements KeyListener {
         JFrame frame = new JFrame("Snake");
         frame.setDefaultCloseOperation(3);
 
+        JTextPane highscorePanel = new JTextPane();
+        highscorePanel.setText("Highscore: 0");
+        highscorePanel.disable();
+        highscorePanel.setSize(500, 50);
+
         // When changing sizes here, also need to change sizes in clear method
         Board board = new Board();
         board.setSize(500, 500);
 
-        frame.add(board);
-        frame.setSize(500, 500);
+        frame.add(BorderLayout.NORTH, highscorePanel);
+        frame.add(BorderLayout.CENTER, board);
+        frame.setSize(500, 550);
         frame.addKeyListener(board);
         frame.setVisible(true);
 
-        board.run(board);
+        board.run(board, highscorePanel);
     }
 
     @Override
@@ -114,6 +121,13 @@ public class Board extends JPanel implements KeyListener {
         g.drawString("Game over!", getWidth() / 2 - 70, getHeight() / 2);
     }
 
+    public void increaseHighscore(JTextPane highscorePanel) {
+        this.highscore += 10;
+
+        highscorePanel.setText("Highscore: " + Integer.toString(this.highscore));
+
+    }
+
     @Override
     public void keyPressed(KeyEvent event) {
         int keyCode = event.getKeyCode();
@@ -149,7 +163,7 @@ public class Board extends JPanel implements KeyListener {
         return;
     }
 
-    public void run(Board board) {
+    public void run(Board board, JTextPane highscorePanel) {
         Timer game = new Timer();
         game.schedule(new TimerTask() {
             boolean initiallySpawned = false;
@@ -173,6 +187,7 @@ public class Board extends JPanel implements KeyListener {
                 if (ateFood(food, g)) {
                     food.spawn(getHeight(), getWidth());
                     player.grow();
+                    increaseHighscore(highscorePanel);
                 }
 
                 update(g);
