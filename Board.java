@@ -5,6 +5,7 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -20,7 +21,7 @@ public class Board extends JPanel implements KeyListener {
         this.highscore = 0;
 
         this.snakeCoordinates = new ArrayList<>();
-        
+
         snakeCoordinates.add(new SnakePart(150, 150));
         snakeCoordinates.add(new SnakePart(140, 150));
         snakeCoordinates.add(new SnakePart(130, 150));
@@ -31,27 +32,41 @@ public class Board extends JPanel implements KeyListener {
         this.food = new Food();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
         JFrame frame = new JFrame("Snake");
+        frame.setResizable(false);
         frame.setDefaultCloseOperation(3);
 
-        JTextPane highscorePanel = new JTextPane();
-        highscorePanel.setText("Highscore: 0");
-        highscorePanel.disable();
-        highscorePanel.setSize(500, 50);
+        JPanel highscoreContainer = new JPanel();
+        highscoreContainer.setBackground(Color.lightGray);
+
+        ScoreSaver scoreSaver = new ScoreSaver();
+
+        JTextPane highscore = new JTextPane();
+        highscore.setText("Current score: 0");
+        highscore.setEnabled(false);
+        highscore.setSize(250, 50);
+
+        JTextPane highscoreMax = new JTextPane();
+        highscoreMax.setText("Highest score: " + scoreSaver.loadHighscore());
+        highscoreMax.setEnabled(false);
+        highscore.setSize(250, 50);
+
+        highscoreContainer.add(BorderLayout.WEST, highscore);
+        highscoreContainer.add(BorderLayout.EAST, highscoreMax);
 
         // When changing sizes here, also need to change sizes in clear method
         Board board = new Board();
         board.setSize(500, 500);
 
-        frame.add(BorderLayout.NORTH, highscorePanel);
+        frame.add(BorderLayout.NORTH, highscoreContainer);
         frame.add(BorderLayout.CENTER, board);
         frame.setSize(500, 550);
         frame.addKeyListener(board);
         frame.setVisible(true);
 
-        board.run(board, highscorePanel);
+        board.run(board, highscore, scoreSaver, highscoreMax);
     }
 
     @Override
@@ -124,7 +139,7 @@ public class Board extends JPanel implements KeyListener {
     public void increaseHighscore(JTextPane highscorePanel) {
         this.highscore += 10;
 
-        highscorePanel.setText("Highscore: " + Integer.toString(this.highscore));
+        highscorePanel.setText("Current score: " + Integer.toString(this.highscore));
 
     }
 
@@ -163,15 +178,39 @@ public class Board extends JPanel implements KeyListener {
         return;
     }
 
-    public void run(Board board, JTextPane highscorePanel) {
+    public void run(Board board, JTextPane highscorePanel, ScoreSaver scoreSaver, JTextPane highscoreMax) {
         Timer game = new Timer();
         game.schedule(new TimerTask() {
             boolean initiallySpawned = false;
+
             @Override
             public void run() {
+                int maxHighscore = 0;
                 Graphics g = board.getGraphics();
 
                 if (hitSomething()) {
+                   try {
+                       maxHighscore = Integer.parseInt(highscoreMax.getText());
+                   } catch(Exception e) {
+                       try {
+                           scoreSaver.saveHighscore(Integer.toString(highscore));
+                           this.cancel();
+                           gameOver(g);
+                           return;
+                       } catch(IOException ex) {
+
+                       }
+                   }
+                   if (highscore > Integer.parseInt(highscoreMax.getText().split(" ")[2])) {
+                       try {
+                           scoreSaver.saveHighscore(Integer.toString(highscore));
+                           this.cancel();
+                           gameOver(g);
+                           return;
+                       } catch(IOException e) {
+
+                       }
+                   }
                     this.cancel();
                     gameOver(g);
                     return;
