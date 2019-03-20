@@ -7,11 +7,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
-public class Board extends JPanel implements KeyListener {
+public class Board extends JPanel implements KeyListener{
     int highscore;
     Snake player;
     Food food;
@@ -62,7 +60,7 @@ public class Board extends JPanel implements KeyListener {
 
         frame.add(BorderLayout.NORTH, highscoreContainer);
         frame.add(BorderLayout.CENTER, board);
-        frame.setSize(500, 550);
+        frame.setSize(500, 500);
         frame.addKeyListener(board);
         frame.setVisible(true);
 
@@ -179,58 +177,65 @@ public class Board extends JPanel implements KeyListener {
     }
 
     public void run(Board board, JTextPane highscorePanel, ScoreSaver scoreSaver, JTextPane highscoreMax) {
-        Timer game = new Timer();
-        game.schedule(new TimerTask() {
+        Thread threaddyKrueger = new Thread() {
             boolean initiallySpawned = false;
 
             @Override
             public void run() {
                 int maxHighscore = 0;
-                Graphics g = board.getGraphics();
+                while (true) {
+                    Graphics g = board.getGraphics();
 
-                if (hitSomething()) {
-                   try {
-                       maxHighscore = Integer.parseInt(highscoreMax.getText());
-                   } catch(Exception e) {
-                       try {
-                           scoreSaver.saveHighscore(Integer.toString(highscore));
-                           this.cancel();
-                           gameOver(g);
-                           return;
-                       } catch(IOException ex) {
+                    if (hitSomething()) {
+                        try {
+                            maxHighscore = Integer.parseInt(highscoreMax.getText());
+                        } catch (Exception e) {
+                            try {
+                                // Try to get the highest score
+                                int currentMaxHighscore =  Integer.parseInt(highscoreMax.getText().split(" ")[2]);
+                                if (highscoreMax.getText().equals("Highest Score: None yet")) {
+                                    scoreSaver.saveHighscore(Integer.toString(highscore));
+                                } else if (highscore > currentMaxHighscore) {
+                                    scoreSaver.saveHighscore(Integer.toString(highscore));
+                                    System.out.println("Highscore saved");
+                                }
+                            } catch (Exception ex) {
+                                // If getting the score in line 193 fails, write 0 anyways
+                                try {
+                                    scoreSaver.saveHighscore("0");
+                                } catch(IOException exc) {
 
-                       }
-                   }
-                   if (highscore > Integer.parseInt(highscoreMax.getText().split(" ")[2])) {
-                       try {
-                           scoreSaver.saveHighscore(Integer.toString(highscore));
-                           this.cancel();
-                           gameOver(g);
-                           return;
-                       } catch(IOException e) {
+                                }
+                            }
+                        }
 
-                       }
-                   }
-                    this.cancel();
-                    gameOver(g);
-                    return;
+                        this.interrupt();
+                        gameOver(g);
+                        return;
+                    }
+
+                    if (!initiallySpawned) {
+                        food.spawn(getHeight(), getWidth());
+                        initiallySpawned = true;
+                    }
+
+                    player.move();
+
+                    if (ateFood(food, g)) {
+                        food.spawn(getHeight(), getWidth());
+                        player.grow();
+                        increaseHighscore(highscorePanel);
+                    }
+
+                    update(g);
+                    try {
+                        Thread.sleep(1000 / 10);
+                    } catch(InterruptedException e) {
+                        // Nothing
+                    }
                 }
-
-                if (!initiallySpawned) {
-                    food.spawn(getHeight(), getWidth());
-                    initiallySpawned = true;
-                }
-
-                player.move();
-
-                if (ateFood(food, g)) {
-                    food.spawn(getHeight(), getWidth());
-                    player.grow();
-                    increaseHighscore(highscorePanel);
-                }
-
-                update(g);
             }
-        }, 0, 150);
+        };
+        threaddyKrueger.start();
     }
 }
