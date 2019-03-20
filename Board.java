@@ -30,41 +30,46 @@ public class Board extends JPanel implements KeyListener{
         this.food = new Food();
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+        //SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Snake");
+            frame.setResizable(false);
+            frame.setDefaultCloseOperation(3);
 
-        JFrame frame = new JFrame("Snake");
-        frame.setResizable(false);
-        frame.setDefaultCloseOperation(3);
+            JPanel highscoreContainer = new JPanel();
+            highscoreContainer.setBackground(Color.lightGray);
 
-        JPanel highscoreContainer = new JPanel();
-        highscoreContainer.setBackground(Color.lightGray);
+            ScoreSaver scoreSaver = new ScoreSaver();
 
-        ScoreSaver scoreSaver = new ScoreSaver();
+            JTextPane highscore = new JTextPane();
+            highscore.setText("Current score: 0");
+            highscore.setEnabled(false);
+            highscore.setSize(250, 50);
 
-        JTextPane highscore = new JTextPane();
-        highscore.setText("Current score: 0");
-        highscore.setEnabled(false);
-        highscore.setSize(250, 50);
+            JTextPane highscoreMax = new JTextPane();
+            try {
+                highscoreMax.setText("Highest score: " + scoreSaver.loadHighscore());
+            } catch(IOException e) {
+                System.out.println("Couldl't read highscore :(");
+            }
+            highscoreMax.setEnabled(false);
+            highscore.setSize(250, 50);
 
-        JTextPane highscoreMax = new JTextPane();
-        highscoreMax.setText("Highest score: " + scoreSaver.loadHighscore());
-        highscoreMax.setEnabled(false);
-        highscore.setSize(250, 50);
+            highscoreContainer.add(BorderLayout.WEST, highscore);
+            highscoreContainer.add(BorderLayout.EAST, highscoreMax);
 
-        highscoreContainer.add(BorderLayout.WEST, highscore);
-        highscoreContainer.add(BorderLayout.EAST, highscoreMax);
+            // When changing sizes here, also need to change sizes in clear method
+            Board board = new Board();
+            board.setSize(500, 500);
 
-        // When changing sizes here, also need to change sizes in clear method
-        Board board = new Board();
-        board.setSize(500, 500);
+            frame.add(BorderLayout.NORTH, highscoreContainer);
+            frame.add(BorderLayout.CENTER, board);
+            frame.setSize(500, 500);
+            frame.addKeyListener(board);
+            frame.setVisible(true);
 
-        frame.add(BorderLayout.NORTH, highscoreContainer);
-        frame.add(BorderLayout.CENTER, board);
-        frame.setSize(500, 500);
-        frame.addKeyListener(board);
-        frame.setVisible(true);
-
-        board.run(board, highscore, scoreSaver, highscoreMax);
+            board.run(board, highscore, scoreSaver, highscoreMax);
+        //});
     }
 
     @Override
@@ -82,7 +87,7 @@ public class Board extends JPanel implements KeyListener{
         g.fillRect(this.food.foodX, this.food.foodY, 10, 10);
 
         if (ateFood(this.food, g)) {
-            this.food.spawn(getHeight(), getWidth());
+            this.food.spawn(440, 490);
             this.player.grow();
         }
     }
@@ -215,14 +220,14 @@ public class Board extends JPanel implements KeyListener{
                     }
 
                     if (!initiallySpawned) {
-                        food.spawn(getHeight(), getWidth());
+                        food.spawn(440, 490);
                         initiallySpawned = true;
                     }
 
                     player.move();
 
                     if (ateFood(food, g)) {
-                        food.spawn(getHeight(), getWidth());
+                        food.spawn(440, 490);
                         player.grow();
                         increaseHighscore(highscorePanel);
                     }
