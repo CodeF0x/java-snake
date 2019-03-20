@@ -5,7 +5,7 @@ public class Food {
     int foodY;
 
     public void spawn(int maxHeight, int maxWidth) {
-        this.foodX = (int) Math.ceil(Math.random() * maxWidth / 10) * 10;
-        this.foodY = (int) Math.ceil(Math.random() * maxHeight / 10) * 10;
+        this.foodX = (int) (Math.random() * maxWidth / 10) * 10;
+        this.foodY = (int) (Math.random() * maxHeight / 10) * 10;
     }
 }
