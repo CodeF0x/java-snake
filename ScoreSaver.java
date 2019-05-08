@@ -1,5 +1,3 @@
-package com.codef0x.snake;
-
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.Charset;

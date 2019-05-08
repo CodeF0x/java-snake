@@ -1,5 +1,3 @@
-package com.codef0x.snake;
-
 public class SnakePart {
     int x;
     int y;

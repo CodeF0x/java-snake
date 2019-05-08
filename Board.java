@@ -1,21 +1,32 @@
-package com.codef0x.snake;
+import javafx.embed.swing.JFXPanel;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
 
-public class Board extends JPanel implements KeyListener{
+public class Board extends JPanel implements KeyListener {
     int highscore;
     Snake player;
     Food food;
     ArrayList<SnakePart> snakeCoordinates;
+    Image background;
+    Media deathSound;
+    Media eatingSound;
+    Media openingSong;
 
     public Board() {
+        // Initialize a JFX here, so MediaPlayer won't complain. Probably a bad practice?
+        new JFXPanel();
         this.highscore = 0;
 
         this.snakeCoordinates = new ArrayList<>();
@@ -28,63 +39,73 @@ public class Board extends JPanel implements KeyListener{
         this.player = new Snake(snakeCoordinates);
 
         this.food = new Food();
+
+        try {
+            this.background = ImageIO.read(new File("resources/background.png"));
+            this.deathSound = new Media(new File("resources/death-sound.mp3").toURI().toString());
+            this.eatingSound = new Media(new File("resources/eating-sound.mp3").toURI().toString());
+            this.openingSong = new Media(new File("resources/opening-song.mp3").toURI().toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        new MediaPlayer(this.openingSong).play();
     }
 
     public static void main(String[] args) {
         //SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Snake");
-            frame.setResizable(false);
-            frame.setDefaultCloseOperation(3);
+        JFrame frame = new JFrame("Snake");
 
-            JPanel highscoreContainer = new JPanel();
-            highscoreContainer.setBackground(Color.lightGray);
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(3);
 
-            ScoreSaver scoreSaver = new ScoreSaver();
+        JPanel highscoreContainer = new JPanel();
+        highscoreContainer.setBackground(Color.lightGray);
 
-            JTextPane highscore = new JTextPane();
-            highscore.setText("Current score: 0");
-            highscore.setEnabled(false);
-            highscore.setSize(250, 50);
+        ScoreSaver scoreSaver = new ScoreSaver();
 
-            JTextPane highscoreMax = new JTextPane();
-            try {
-                highscoreMax.setText("Highest score: " + scoreSaver.loadHighscore());
-            } catch(IOException e) {
-                System.out.println("Couldl't read highscore :(");
-            }
-            highscoreMax.setEnabled(false);
-            highscore.setSize(250, 50);
+        JTextPane highscore = new JTextPane();
+        highscore.setText("Current score: 0");
+        highscore.setEnabled(false);
+        highscore.setSize(250, 50);
 
-            highscoreContainer.add(BorderLayout.WEST, highscore);
-            highscoreContainer.add(BorderLayout.EAST, highscoreMax);
+        JTextPane highscoreMax = new JTextPane();
+        try {
+            highscoreMax.setText("Highest score: " + scoreSaver.loadHighscore());
+        } catch (IOException e) {
+            System.out.println("Couldn't read highscore :(");
+        }
+        highscoreMax.setEnabled(false);
+        highscore.setSize(250, 50);
 
-            // When changing sizes here, also need to change sizes in clear method
-            Board board = new Board();
-            board.setSize(500, 500);
+        highscoreContainer.add(BorderLayout.WEST, highscore);
+        highscoreContainer.add(BorderLayout.EAST, highscoreMax);
 
-            frame.add(BorderLayout.NORTH, highscoreContainer);
-            frame.add(BorderLayout.CENTER, board);
-            frame.setSize(500, 500);
-            frame.addKeyListener(board);
-            frame.setVisible(true);
+        // When changing sizes here, also need to change sizes in clear method
+        Board board = new Board();
+        board.setSize(500, 500);
 
-            board.run(board, highscore, scoreSaver, highscoreMax);
+        frame.add(BorderLayout.NORTH, highscoreContainer);
+        frame.add(BorderLayout.CENTER, board);
+        frame.setSize(500, 500);
+        frame.addKeyListener(board);
+        frame.setVisible(true);
+
+        board.run(board, highscore, scoreSaver, highscoreMax);
         //});
     }
 
     @Override
     public void paintComponent(Graphics g) {
         clear(g);
+        g.drawImage(this.background, 0, 0, 500, 500, null);
 
         // Snake
         this.player.coordinates.forEach(snakePart -> {
-            g.setColor(Color.BLUE);
-            g.fillRect(snakePart.x, snakePart.y, 10, 10);
+            g.drawImage(this.player.snakePart, snakePart.x, snakePart.y, 10, 10, null);
         });
-
         // Food
-        g.setColor(Color.RED);
-        g.fillRect(this.food.foodX, this.food.foodY, 10, 10);
+        g.drawImage(this.food.apple, this.food.foodX, this.food.foodY, 10, 10, null);
 
         if (ateFood(this.food, g)) {
             this.food.spawn(440, 490);
@@ -105,6 +126,7 @@ public class Board extends JPanel implements KeyListener{
 
         if (this.player.coordinates.get(0).x == food.foodX && this.player.coordinates.get(0).y == food.foodY) {
             g.clearRect(food.foodX, food.foodY, 10, 10);
+            new MediaPlayer(this.eatingSound).play();
             return true;
         }
         return false;
@@ -132,6 +154,9 @@ public class Board extends JPanel implements KeyListener{
 
     public void gameOver(Graphics g) {
         clear(g);
+        g.drawImage(this.background, 0, 0, 500, 500, null);
+
+        new MediaPlayer(this.deathSound).play();
 
         g.setColor(Color.BLACK);
         g.setFont(new Font("TimesRoman", Font.PLAIN, 32));
@@ -197,7 +222,7 @@ public class Board extends JPanel implements KeyListener{
                         } catch (Exception e) {
                             try {
                                 // Try to get the highest score
-                                int currentMaxHighscore =  Integer.parseInt(highscoreMax.getText().split(" ")[2]);
+                                int currentMaxHighscore = Integer.parseInt(highscoreMax.getText().split(" ")[2]);
                                 if (highscoreMax.getText().equals("Highest Score: None yet")) {
                                     scoreSaver.saveHighscore(Integer.toString(highscore));
                                 } else if (highscore > currentMaxHighscore) {
@@ -207,8 +232,8 @@ public class Board extends JPanel implements KeyListener{
                             } catch (Exception ex) {
                                 // If getting the score in line 193 fails, write 0 anyways
                                 try {
-                                    scoreSaver.saveHighscore("0");
-                                } catch(IOException exc) {
+                                    scoreSaver.saveHighscore(Integer.toString(highscore));
+                                } catch (IOException exc) {
 
                                 }
                             }
@@ -235,7 +260,7 @@ public class Board extends JPanel implements KeyListener{
                     update(g);
                     try {
                         Thread.sleep(1000 / 10);
-                    } catch(InterruptedException e) {
+                    } catch (InterruptedException e) {
                         // Nothing
                     }
                 }
