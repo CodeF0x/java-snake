@@ -133,10 +133,11 @@ public class Board extends JPanel implements KeyListener {
     }
 
     public boolean hitSomething() {
-        boolean hitLeftWall = this.player.coordinates.get(0).x < 10;
+        System.out.println(getWidth() + " " + getHeight());
+        boolean hitLeftWall = this.player.coordinates.get(0).x < 0;
         boolean hitUpperWall = this.player.coordinates.get(0).y < 0;
-        boolean hitRightWall = this.player.coordinates.get(0).x > getWidth() - 10;
-        boolean hitLowerWall = this.player.coordinates.get(0).y > (getHeight() + 22) - 10; // also here plus 22
+        boolean hitRightWall = this.player.coordinates.get(0).x > getWidth();
+        boolean hitLowerWall = this.player.coordinates.get(0).y > getHeight() - 10;
 
         // Check if snake has eaten itself
         for (int i = 1; i < this.player.coordinates.size(); i++) {
