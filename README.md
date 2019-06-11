@@ -1,4 +1,4 @@
-Made this game to get a into Java, then expanded it with minimal sound effects and graphics for a school project.
+Made this game to get into Java, then expanded it with minimal sound effects and graphics for a school project.
 
 #### Used sounds / graphics:
 

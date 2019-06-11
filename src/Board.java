@@ -133,7 +133,6 @@ public class Board extends JPanel implements KeyListener {
     }
 
     public boolean hitSomething() {
-        System.out.println(getWidth() + " " + getHeight());
         boolean hitLeftWall = this.player.coordinates.get(0).x < 0;
         boolean hitUpperWall = this.player.coordinates.get(0).y < 0;
         boolean hitRightWall = this.player.coordinates.get(0).x > getWidth();
